@@ -49,13 +49,13 @@ public:
 };
 
 // Key states
-std::atomic<bool> W_pressed(false);
-std::atomic<bool> A_pressed(false);
-std::atomic<bool> S_pressed(false);
-std::atomic<bool> D_pressed(false);
-std::atomic<bool> Q_pressed(false); // left click hold
-std::atomic<bool> E_pressed(false); // right click hold
-std::atomic<bool> active(false);    // toggle ON/OFF
+std::atomic<bool> E_pressed(false); // left
+std::atomic<bool> S_pressed(false); // down
+std::atomic<bool> D_pressed(false); // right
+std::atomic<bool> F_pressed(false); // left
+std::atomic<bool> W_pressed(false); // left click
+std::atomic<bool> R_pressed(false); // right click
+std::atomic<bool> space_pressed(false); // hold for active
 
 HHOOK keyboardHook;
 
@@ -68,26 +68,27 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         bool keyDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         bool keyUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
 
-        // F6 toggle
-        if (kb->vkCode == VK_F6 && keyDown)
+        // Spacebar activates the functionality
+        if (kb->vkCode == VK_SPACE)
         {
-            active = !active;
-            std::cout << "Active = " << active << "\n";
-            return 1;
+            space_pressed = keyDown;
+            // Suppress space for other apps while holding
+            if (keyDown) return 1;
+            if (keyUp) return 1;
         }
 
-        // Only handle our keys when active
-        if (active)
+        // Only handle keys when space is held
+        if (space_pressed)
         {
             switch (kb->vkCode)
             {
-            case 'W': W_pressed = keyDown; return 1;
-            case 'A': A_pressed = keyDown; return 1;
-            case 'S': S_pressed = keyDown; return 1;
-            case 'D': D_pressed = keyDown; return 1;
+            case 'E': E_pressed = keyDown; return 1; // left
+            case 'S': S_pressed = keyDown; return 1; // down
+            case 'D': D_pressed = keyDown; return 1; // right
+            case 'F': F_pressed = keyDown; return 1; // up
 
-            case 'Q': Q_pressed = keyDown; return 1; // hold/release
-            case 'E': E_pressed = keyDown; return 1; // hold/release
+            case 'W': W_pressed = keyDown; return 1; // left click
+            case 'R': R_pressed = keyDown; return 1; // right click
             }
         }
     }
@@ -104,32 +105,32 @@ void InputLoop()
 
     while (true)
     {
-        if (active)
+        if (space_pressed)
         {
             int dx = 0, dy = 0;
-            if (W_pressed) dy -= speed;
-            if (S_pressed) dy += speed;
-            if (A_pressed) dx -= speed;
-            if (D_pressed) dx += speed;
+            if (E_pressed) dy -= speed; // up
+            if (D_pressed) dy += speed; // down
+            if (F_pressed) dx += speed; // right
+            if (S_pressed) dx -= speed; // left
 
             MyMouse::MoveMouse(dx, dy);
 
             // Handle left click hold
-            if (Q_pressed && !leftHeld) { MyMouse::LeftDown(); leftHeld = true; }
-            if (!Q_pressed && leftHeld) { MyMouse::LeftUp(); leftHeld = false; }
+            if (W_pressed && !leftHeld) { MyMouse::LeftDown(); leftHeld = true; }
+            if (!W_pressed && leftHeld) { MyMouse::LeftUp(); leftHeld = false; }
 
             // Handle right click hold
-            if (E_pressed && !rightHeld) { MyMouse::RightDown(); rightHeld = true; }
-            if (!E_pressed && rightHeld) { MyMouse::RightUp(); rightHeld = false; }
-
-            // Detect Shift / Ctrl
-            bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
-            bool ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
-            if (shift) std::cout << "Shift held\n";
-            if (ctrl)  std::cout << "Ctrl held\n";
+            if (R_pressed && !rightHeld) { MyMouse::RightDown(); rightHeld = true; }
+            if (!R_pressed && rightHeld) { MyMouse::RightUp(); rightHeld = false; }
+        }
+        else
+        {
+            // Reset held states when space is released
+            if (leftHeld) { MyMouse::LeftUp(); leftHeld = false; }
+            if (rightHeld) { MyMouse::RightUp(); rightHeld = false; }
         }
 
-        Sleep(10);
+        Sleep(10); // smooth loop
     }
 }
 
@@ -142,7 +143,8 @@ int main()
         return 1;
     }
 
-    std::cout << "Hook installed. Press F6 to toggle ON/OFF.\n";
+    std::cout << "Hold Spacebar to activate mouse keys.\n";
+    std::cout << "E/S/D/F = Move, W = Left Click, R = Right Click\n";
 
     std::thread loopThread(InputLoop);
 
