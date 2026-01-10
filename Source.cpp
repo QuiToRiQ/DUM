@@ -142,7 +142,7 @@ void InputLoop()
     }
 }
 
-int main()
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
     if (!keyboardHook) { std::cout << "Failed to install hook!\n"; return 1; }
