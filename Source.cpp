@@ -1,3 +1,15 @@
+//Remove control functionality because its not comfortable to use.
+
+//Use alt instead of control
+
+//Try making mouse slow by default and two acceleration modifiers alt and shift
+
+//Some apps require special strategy (for example in file explorer. if u want to rename a folder, when u disable mouse the focus lefts on another window * current fix is to press alt again to move focus back)
+
+//If changing speed intrepts mouse click (resets it if was clicked previously)
+
+/*Try using double Caps Lock instead of double ALT for on/off*/ /*double Caps Lock can be used to simulate arrow keys while double Alt for mouse actions*/
+  
 #include <Windows.h>
 #include <iostream>
 #include <atomic>
@@ -114,8 +126,9 @@ void InputLoop()
             if (D_pressed) dx += baseSpeed;
 
             // Shift = accelerate, Ctrl = slow
-            if (GetAsyncKeyState(VK_SHIFT) & 0x8000) { dx *= 2; dy *= 2; }
-            if (GetAsyncKeyState(VK_CONTROL) & 0x8000) { dx /= 2; dy /= 2; }
+            if (GetAsyncKeyState(VK_SHIFT) & 0x8000) { dx *= 3; dy *= 3; }
+            //if (GetAsyncKeyState(VK_MENU) & 0x8000) { dx *= 3; dy *= 2; }
+            if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) || (GetAsyncKeyState(VK_MENU) & 0x8000)) { dx /= 2; dy /= 2; }
 
             MyMouse::MoveMouse(dx, dy);
 
