@@ -100,9 +100,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		bool keyUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
 
 		// -------------------------------
-		// CTRL = BYPASS (no suppression)
+		// CTRL/WINDOWS = BYPASS (no suppression)
 		// -------------------------------
 		if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+		{
+			return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
+		}
+		if (GetAsyncKeyState(VK_LWIN) & 0x8000)
 		{
 			return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
 		}
