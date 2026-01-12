@@ -1,4 +1,5 @@
 K2M offers software that lets you use your keyboard as a mouse.
+
 Usage:
 
     Caps Lock: Hold or Switch depends on bHoldCapsLock in config.ini (Shift + Caps Lock: Simulates CapsLock action)
