@@ -21,9 +21,9 @@ make a choice between using arrow/back&forward keys and between holding and pres
 struct UserSettings
 {
 	bool bHoldCapsLock = true; // decides either to use toggle or hold capslock method
-	bool bUseArrows = true; // switches between arrow keys / back&forward mouse buttons
+	bool bUseArrows = false; // switches between arrow keys / back&forward mouse buttons
 	int baseMouseSpeed = 3;
-	int MouseAccelerationMultiplier = 7;
+	int MouseAccelerationMultiplier = 5;
 	int baseScrollSpeed = 120;
 	int ScrollAccelerationDivider = 4;
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +173,7 @@ private:
 };
 
 // Key states
+std::atomic<bool> Alt_pressed(false); // block alt to avoid app conflicts
 std::atomic<bool> CapsLock_pressed(false); // enable/disable
 std::atomic<bool> W_pressed(false); // up
 std::atomic<bool> A_pressed(false); // left
@@ -216,17 +217,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		bool keyDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
 		bool keyUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
 
-		// -------------------------------
-		// CTRL/WINDOWS = BYPASS (no suppression)
-		// -------------------------------
-		if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-		{
-			return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
-		}
-		if (GetAsyncKeyState(VK_LWIN) & 0x8000)
-		{
-			return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
-		}
+		//// -------------------------------
+		//// CTRL/WINDOWS = BYPASS (no suppression)
+		//// -------------------------------
+		//if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+		//{
+		//	return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
+		//}
+		//if (GetAsyncKeyState(VK_LWIN) & 0x8000)
+		//{
+		//	return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
+		//}
 
 		// -------------------------------
 		// Only suppress keys when active
@@ -234,19 +235,20 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		bool exception_pressed = false;
 		switch (kb->vkCode)
 		{
+		case 'J': case 'Q': Q_pressed = keyDown; exception_pressed = true; break;
+		case 'K': case 'E': E_pressed = keyDown; exception_pressed = true; break;
+		case VK_LMENU: Alt_pressed = keyDown; exception_pressed = true; break;
 		case 'A': A_pressed = keyDown; exception_pressed = true; break;
 		case 'W': W_pressed = keyDown; exception_pressed = true; break;
 		case 'S': S_pressed = keyDown; exception_pressed = true; break;
 		case 'D': D_pressed = keyDown; exception_pressed = true; break;
-		case 'Q': Q_pressed = keyDown; exception_pressed = true; break;
-		case 'E': E_pressed = keyDown; exception_pressed = true; break;
 		case 'R': R_pressed = keyDown; exception_pressed = true; break;
 		case 'F': F_pressed = keyDown; exception_pressed = true; break;
 		case 'Z': Z_pressed = keyDown; exception_pressed = true; break;
 		case 'X': X_pressed = keyDown; exception_pressed = true; break;
 		case 'C': C_pressed = keyDown; exception_pressed = true; break;
 		}
-
+		
 		if (active && exception_pressed) return 1;
 		if (kb->vkCode == VK_CAPITAL)
 		{
@@ -319,7 +321,7 @@ void InputLoop()
 
 			// Shift = accelerate, Ctrl = slow
 			if (GetAsyncKeyState(VK_SHIFT) & 0x8000) { dx *= US_Profile.MouseAccelerationMultiplier; dy *= US_Profile.MouseAccelerationMultiplier; }
-			if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) || (GetAsyncKeyState(VK_MENU) & 0x8000)) { 
+			if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) ||Alt_pressed) { 
 				dx *= US_Profile.MouseAccelerationMultiplier; 
 				dy *= US_Profile.MouseAccelerationMultiplier;  
 				ds /= US_Profile.ScrollAccelerationDivider; 
