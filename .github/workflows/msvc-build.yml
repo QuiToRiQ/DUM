@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Compile
+        shell: cmd
+        run: cl /std:c++17 /EHsc /O2 main.cpp /link user32.lib advapi32.lib
+
+      - name: Rename executable
+        shell: cmd
+        run: ren main.exe K2M.exe
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: K2M
+          path: K2M.exe
